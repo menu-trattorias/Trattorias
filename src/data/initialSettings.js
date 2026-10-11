@@ -35,9 +35,5 @@ export const INITIAL_SETTINGS = {
     "Wi-Fi Available",
     "Reservations Accepted"
   ],
-  banners: [
-    { id: '1', url: '/images/1789645196075-09rlye.webp', alt: 'Trattorias Restaurant Cliffside Rooftop Sunset View' },
-    { id: '2', url: '/images/1789645245949-oew1l.webp', alt: 'Delicious Multi-Cuisine Dishes at Trattorias' },
-    { id: '3', url: '/images/1789645291491-5zmffd.webp', alt: 'Fresh Dining and Ocean Breeze at Varkala Cliff' }
-  ]
+  banners: []
 };
