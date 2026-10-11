@@ -321,6 +321,7 @@ export const SettingsEditor = ({ settings, onRefresh }) => {
             />
           </div>
 
+          {/* Google Reviews URL (Commented out)
           <div style={{ marginBottom: '14px' }}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '5px' }}>
               Google Reviews URL
@@ -341,6 +342,7 @@ export const SettingsEditor = ({ settings, onRefresh }) => {
               }}
             />
           </div>
+          */}
 
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '5px' }}>

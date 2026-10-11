@@ -291,6 +291,7 @@ export const PublicMenu = () => {
                   </div>
                 </a>
 
+                {/* Review Card (Commented out)
                 <a
                   href={activeSettings?.google_reviews_url || 'https://www.google.com/maps/place/Trattorias+Restaurant/'}
                   target="_blank"
@@ -313,6 +314,7 @@ export const PublicMenu = () => {
                     </div>
                   </div>
                 </a>
+                */}
               </div>
             </div>
           ) : (
