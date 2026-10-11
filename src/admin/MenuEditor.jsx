@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { DataService } from '../lib/supabase';
 import { filterMenuItems } from '../lib/search';
-import ImageUploader from './ImageUploader';
 import UnsavedChangesBar from './UnsavedChangesBar';
 import CategorySelectDropdown from './CategorySelectDropdown';
 
@@ -754,15 +753,6 @@ export const MenuEditor = ({ menuItems = [], categories = [], onRefresh }) => {
                   }}
                 />
               </div>
-
-              {/* Supabase Image Uploader */}
-              <ImageUploader
-                value={formData.image_url || ''}
-                onChange={(url) => setFormData({ ...formData, image_url: url })}
-                label="Dish Photo (Supabase Storage)"
-                folder="dishes"
-                placeholder="Upload photo or paste image URL"
-              />
 
               {/* Variants Section */}
               <div style={{ marginBottom: '16px', background: 'var(--adm-bg)', padding: '12px', borderRadius: '10px' }}>
