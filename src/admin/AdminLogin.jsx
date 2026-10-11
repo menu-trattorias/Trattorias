@@ -3,6 +3,7 @@ import { ShieldCheck, Mail, Lock, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getSupabase } from '../lib/supabase';
 import { isUserAuthorizedAdmin } from '../lib/auth';
+import './admin.css';
 
 export const AdminLogin = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
@@ -56,8 +57,32 @@ export const AdminLogin = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="admin-login-wrap">
-      <div className="admin-login-card">
+    <div
+      className="admin-login-wrap"
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px 16px',
+        boxSizing: 'border-box',
+        background: '#F4F7F5'
+      }}
+    >
+      <div
+        className="admin-login-card"
+        style={{
+          width: '100%',
+          maxWidth: '440px',
+          margin: '0 auto',
+          background: '#ffffff',
+          borderRadius: '24px',
+          padding: '36px 30px',
+          boxShadow: '0 10px 30px rgba(22, 57, 27, 0.08)',
+          border: '1px solid #E2ECE5',
+          boxSizing: 'border-box'
+        }}
+      >
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
