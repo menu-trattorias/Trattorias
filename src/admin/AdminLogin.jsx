@@ -166,7 +166,7 @@ export const AdminLogin = ({ onLoginSuccess }) => {
               <input
                 type="email"
                 required
-                placeholder="admin@trattorias.com"
+                placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
