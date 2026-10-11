@@ -638,7 +638,9 @@ input, textarea {
     padding: 0;
     margin-bottom: 0; /* Removed spacing */
     scroll-snap-type: x mandatory;
-    scrollbar-width: none; /* Hide scrollbar Firefox */
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain; /* Hide scrollbar Firefox */
 }
 .banner-carousel::-webkit-scrollbar {
     display: none; /* Hide scrollbar Chrome/Safari */
@@ -652,6 +654,7 @@ input, textarea {
     display: block;
     border-radius: 0;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
     box-shadow: none;
     object-fit: cover;
 }
@@ -668,6 +671,10 @@ input, textarea {
     z-index: 2; /* Above banner but below main-content */
 }
 .dot {
+    border: none;
+    padding: 0;
+    outline: none;
+    cursor: pointer;
     width: 8px;
     height: 8px;
     border-radius: 50%;

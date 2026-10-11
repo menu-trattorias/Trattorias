@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu } from 'lucide-react';
 
 export const Header = ({ onOpenNav, settings }) => {
@@ -6,36 +6,161 @@ export const Header = ({ onOpenNav, settings }) => {
   const carouselRef = useRef(null);
   const banners = settings?.banners || [];
 
-  // Auto-scroll banners
-  useEffect(() => {
+  // Track latest currentSlide in a ref to avoid stale state in timers
+  const currentSlideRef = useRef(0);
+  currentSlideRef.current = currentSlide;
+
+  // Flags and timers to manage smooth transitions and prevent fighting between auto-scroll and onScroll
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticScrollTimerRef = useRef(null);
+  const scrollDebounceTimerRef = useRef(null);
+  const isInteractingRef = useRef(false);
+  const autoScrollTimerRef = useRef(null);
+
+  // Smoothly scroll to target slide
+  const scrollToSlide = useCallback((index, behavior = 'smooth') => {
+    if (!carouselRef.current) return;
+    const container = carouselRef.current;
+    
+    // Calculate exact target left position using the child offset or client width
+    const targetChild = container.children[index];
+    const targetLeft = targetChild ? targetChild.offsetLeft : index * (container.clientWidth || 0);
+
+    // Block handleScroll from fighting the programmatic smooth scroll
+    isProgrammaticScrollRef.current = true;
+    if (programmaticScrollTimerRef.current) {
+      clearTimeout(programmaticScrollTimerRef.current);
+    }
+    programmaticScrollTimerRef.current = setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 650);
+
+    setCurrentSlide(index);
+    container.scrollTo({
+      left: targetLeft,
+      behavior
+    });
+  }, []);
+
+  // Start / restart the auto-scroll interval
+  const startAutoScroll = useCallback(() => {
+    if (autoScrollTimerRef.current) {
+      clearInterval(autoScrollTimerRef.current);
+    }
     if (banners.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % banners.length);
+
+    autoScrollTimerRef.current = setInterval(() => {
+      if (isInteractingRef.current) return;
+      const nextSlide = (currentSlideRef.current + 1) % banners.length;
+      scrollToSlide(nextSlide, 'smooth');
     }, 3500);
+  }, [banners.length, scrollToSlide]);
 
-    return () => clearInterval(interval);
-  }, [banners.length]);
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollTimerRef.current) {
+      clearInterval(autoScrollTimerRef.current);
+      autoScrollTimerRef.current = null;
+    }
+  }, []);
 
-  // Scroll carousel container when currentSlide changes
+  // Handle banner list changes and initialize auto-scroll
   useEffect(() => {
-    if (carouselRef.current) {
-      const scrollWidth = carouselRef.current.offsetWidth;
-      carouselRef.current.scrollTo({
-        left: currentSlide * scrollWidth,
-        behavior: 'smooth'
-      });
+    if (banners.length > 1) {
+      startAutoScroll();
+    } else {
+      stopAutoScroll();
     }
-  }, [currentSlide]);
+    return () => stopAutoScroll();
+  }, [banners.length, startAutoScroll, stopAutoScroll]);
 
-  const handleScroll = () => {
-    if (carouselRef.current) {
-      const scrollLeft = carouselRef.current.scrollLeft;
-      const width = carouselRef.current.offsetWidth;
-      const newIndex = Math.round(scrollLeft / width);
-      if (newIndex !== currentSlide && newIndex >= 0 && newIndex < banners.length) {
-        setCurrentSlide(newIndex);
+  // Handle tab visibility (pause when backgrounded, resume when active)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopAutoScroll();
+      } else if (banners.length > 1) {
+        startAutoScroll();
       }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [banners.length, startAutoScroll, stopAutoScroll]);
+
+  // Keep carousel aligned on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (carouselRef.current) {
+        const container = carouselRef.current;
+        const targetChild = container.children[currentSlideRef.current];
+        const targetLeft = targetChild ? targetChild.offsetLeft : currentSlideRef.current * (container.clientWidth || 0);
+        container.scrollTo({
+          left: targetLeft,
+          behavior: 'auto'
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (programmaticScrollTimerRef.current) clearTimeout(programmaticScrollTimerRef.current);
+      if (scrollDebounceTimerRef.current) clearTimeout(scrollDebounceTimerRef.current);
+      if (autoScrollTimerRef.current) clearInterval(autoScrollTimerRef.current);
+    };
+  }, []);
+
+  // User manual scroll / swipe handler
+  const handleScroll = () => {
+    // If the scroll was triggered programmatically (auto-scroll or dot click), do NOT override state
+    if (isProgrammaticScrollRef.current) return;
+
+    if (scrollDebounceTimerRef.current) {
+      clearTimeout(scrollDebounceTimerRef.current);
     }
+
+    // Debounce to wait until scroll settles / snaps
+    scrollDebounceTimerRef.current = setTimeout(() => {
+      if (!carouselRef.current || isProgrammaticScrollRef.current) return;
+      const container = carouselRef.current;
+      const width = container.clientWidth;
+      if (width > 0) {
+        const newIndex = Math.round(container.scrollLeft / width);
+        if (newIndex >= 0 && newIndex < banners.length && newIndex !== currentSlideRef.current) {
+          setCurrentSlide(newIndex);
+        }
+      }
+    }, 100);
+  };
+
+  // Dot click handler
+  const handleDotClick = (index) => {
+    scrollToSlide(index, 'smooth');
+    // Restart interval from this slide
+    startAutoScroll();
+  };
+
+  // Interaction handlers (pause auto-scroll when user touches or hovers)
+  const handleTouchStart = () => {
+    isInteractingRef.current = true;
+    stopAutoScroll();
+  };
+
+  const handleTouchEnd = () => {
+    isInteractingRef.current = false;
+    startAutoScroll();
+  };
+
+  const handleMouseEnter = () => {
+    isInteractingRef.current = true;
+  };
+
+  const handleMouseLeave = () => {
+    isInteractingRef.current = false;
   };
 
   return (
@@ -53,7 +178,15 @@ export const Header = ({ onOpenNav, settings }) => {
       <div className="hero-content">
         {banners.length > 0 ? (
           <>
-            <div className="banner-carousel" ref={carouselRef} onScroll={handleScroll}>
+            <div
+              className="banner-carousel"
+              ref={carouselRef}
+              onScroll={handleScroll}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
               {banners.map((banner, index) => (
                 <img
                   key={banner.id || index}
@@ -70,10 +203,12 @@ export const Header = ({ onOpenNav, settings }) => {
             {banners.length > 1 && (
               <div className="carousel-dots">
                 {banners.map((_, index) => (
-                  <div
+                  <button
                     key={index}
+                    type="button"
                     className={`dot ${currentSlide === index ? 'active' : ''}`}
-                    onClick={() => setCurrentSlide(index)}
+                    onClick={() => handleDotClick(index)}
+                    aria-label={`Go to banner slide ${index + 1}`}
                   />
                 ))}
               </div>
