@@ -1,0 +1,8 @@
+# Robots.txt for Trattorias Restaurant, Varkala
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+
+# Sitemaps
+Sitemap: https://trattoriasvarkala.com/sitemap.xml
